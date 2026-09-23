@@ -230,6 +230,7 @@
   .faq details p { padding: 0 44px 26px 0; font-size: 16.5px; }
   .faq code { font: 400 14px var(--mono); color: var(--ink); background: var(--card); padding: 1px 6px; border: 1px solid var(--rule); }
   @media (max-width: 900px) { .faq-grid { grid-template-columns: minmax(0, 1fr); } .faq details p { padding-right: 0; } }
+  @media (prefers-reduced-motion: reduce) { .faq summary::after { transition: none; } }
 
   /* ── Final CTA ──────────────────────────────────────── */
   .final { position: relative; overflow: hidden; text-align: center; color: var(--on-navy); background: radial-gradient(800px 420px at 50% 0%, rgba(234, 166, 60, 0.12), transparent 70%), var(--navy-900); }

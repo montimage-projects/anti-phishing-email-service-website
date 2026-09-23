@@ -125,7 +125,7 @@ h1, h2, h3 { margin: 0; font-family: var(--display); font-weight: 600; color: va
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .js .reveal { opacity: 1; transform: none; transition: none; }
-  .btn, .btn .arrow, .faq summary::after { transition: none; }
+  .btn, .btn .arrow { transition: none; }
 }
 
 /* ── Footer links ───────────────────────────────────── */
