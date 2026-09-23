@@ -1,0 +1,49 @@
+name: General Feedback
+description: Share what works, what does not, or anything else
+title: "[Feedback]: "
+labels: ["feedback"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        We would like to hear what you think of the Anti-Phishing Email Service. This issue is public, so leave out email content and personal data.
+
+  - type: dropdown
+    id: type
+    attributes:
+      label: Feedback type
+      options:
+        - Overall experience
+        - Verdict and report
+        - Speed
+        - Documentation and website
+        - Privacy and security
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: sentiment
+    attributes:
+      label: Overall impression
+      options:
+        - Positive
+        - Neutral
+        - Needs improvement
+    validations:
+      required: true
+
+  - type: textarea
+    id: feedback
+    attributes:
+      label: Your feedback
+      placeholder: "I think..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggestions
+    attributes:
+      label: Suggestions
+    validations:
+      required: false

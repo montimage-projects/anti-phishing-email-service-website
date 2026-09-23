@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Anti-Phishing Email Service | Montimage</title>
+<meta name="description" content="Staff forward a suspicious email to one mailbox and get back a plain-language phishing verdict with the reasons and next steps. Self-hosted, by Montimage.">
+<link rel="icon" type="image/png" href="montimage-logo.png">
+<link rel="canonical" href="https://montimage-projects.github.io/anti-phishing-email-service-website/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Anti-Phishing Email Service | Montimage">
+<meta property="og:description" content="Forward a suspicious email to one mailbox and get back a plain-language phishing verdict with the reasons and next steps.">
+<meta property="og:url" content="https://montimage-projects.github.io/anti-phishing-email-service-website/">
+<!--
+  Montimage Anti-Phishing Email Service: landing page.
+  Same identity as the verdict email and PDF report: navy ink, ivory paper,
+  gold hairlines, Cormorant Garamond display and Source Sans 3 text. Fonts
+  are self-hosted (SIL OFL, see fonts/), so the page loads nothing from third
+  parties. Tokens, header, footer and buttons live in site.css, shared with
+  privacy.html and support.html.
+-->
+<link rel="stylesheet" href="site.css">
+<style>
+  /* ── Hero ───────────────────────────────────────────── */
+  .hero {
+    position: relative; overflow: hidden; color: var(--on-navy);
+    background:
+      radial-gradient(900px 520px at 78% 38%, rgba(234, 166, 60, 0.10), transparent 70%),
+      radial-gradient(700px 500px at 8% 100%, rgba(26, 107, 138, 0.22), transparent 70%),
+      linear-gradient(180deg, var(--navy-900) 0%, var(--navy) 100%);
+  }
+  .guilloche { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; opacity: 0.55; }
+  .hero-grid {
+    position: relative; z-index: 1;
+    display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr); gap: clamp(40px, 6vw, 88px);
+    align-items: center; padding-top: clamp(40px, 6vw, 72px); padding-bottom: clamp(72px, 9vw, 120px);
+  }
+  .hero h1 {
+    margin-top: 26px; color: #FFFDF8;
+    font-size: clamp(46px, 6.6vw, 84px); line-height: 0.98; font-weight: 600; letter-spacing: -0.015em;
+  }
+  .hero h1 em { font-style: italic; color: var(--mark); }
+  .hero-lede { margin-top: 28px; max-width: 540px; font-size: clamp(18px, 1.6vw, 20px); line-height: 1.6; color: var(--on-navy); }
+  .hero-ctas { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 40px; }
+  .hero-note { margin-top: 22px; font-size: 14px; color: var(--on-navy-muted); }
+  @media (max-width: 960px) { .hero-grid { grid-template-columns: minmax(0, 1fr); } }
+
+  /* Example report card, modelled on _report_email.jinja2 */
+  .report-stage { position: relative; }
+  .report-stage::before {
+    content: ""; position: absolute; inset: 22px -18px 13px 18px;
+    border: 1px solid var(--navy-line); border-radius: 3px;
+  }
+  .report {
+    position: relative; background: var(--card); color: var(--body); border-radius: 3px;
+    box-shadow: 0 40px 80px -30px rgba(3, 10, 22, 0.75), 0 2px 0 var(--mark) inset;
+    font-size: 14px; line-height: 1.5; overflow: hidden;
+  }
+  .report-mast { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 18px 28px; border-bottom: 1px solid var(--rule); }
+  .report-brand { font: 600 10.5px/1 var(--text); letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink); white-space: nowrap; }
+  .report-brand span { color: var(--gold); margin-right: 6px; }
+  .report-tag { font: 400 11px/1 var(--mono); color: var(--muted); letter-spacing: 0.04em; white-space: nowrap; }
+  .report-body { padding: 24px 28px 26px; }
+  .report-q { font: 600 10.5px/1 var(--text); letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold-ink); }
+  .verdict { display: flex; gap: 16px; align-items: flex-start; margin-top: 14px; padding: 16px 18px; background: var(--unsafe-tint); border: 1px solid var(--unsafe-line); border-left: 3px solid var(--unsafe); }
+  .seal { flex: none; display: grid; place-items: center; width: 42px; height: 42px; border-radius: 50%; background: var(--unsafe); color: #fff; font: 600 20px/1 var(--text); }
+  .verdict h3 { font-size: 34px; line-height: 1; color: var(--unsafe); }
+  .verdict p { margin-top: 6px; color: var(--body); font-size: 14px; }
+  .report-meta { margin-top: 12px; font-size: 12.5px; color: var(--muted); }
+  .report-meta strong { color: var(--ink); font-weight: 600; }
+  .report-label { margin-top: 20px; font: 600 10.5px/1 var(--text); letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
+  .kv { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 4px 12px; margin-top: 10px; font-size: 13px; }
+  .kv dt { color: var(--muted); }
+  .kv dd { margin: 0; color: var(--body); overflow-wrap: anywhere; }
+  .kv dd.strong { color: var(--ink); font-weight: 600; }
+  .report h4 { margin: 20px 0 0; font: 600 20px/1.1 var(--display); color: var(--ink); }
+  .reasons { margin: 8px 0 0; padding-left: 18px; font-size: 13.5px; }
+  .reasons li { margin: 3px 0; }
+  .reasons li::marker { color: var(--gold); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border: 1px solid var(--chip-line); border-radius: 12px; font-size: 12px; color: var(--body); white-space: nowrap; }
+  .chip b { font-weight: 700; }
+  .chip.flag b { color: var(--unsafe); }
+  .chip.clear b { color: var(--safe); }
+  .chip.na b { color: var(--muted); }
+  .pdf { display: flex; align-items: center; gap: 12px; margin-top: 20px; padding: 12px 14px; border: 1px solid var(--rule); background: var(--paper); font-size: 12.5px; }
+  .pdf-icon { flex: none; width: 28px; height: 34px; display: grid; place-items: center; border: 1px solid var(--gold); border-radius: 2px; background: var(--card); font: 700 9px/1 var(--text); letter-spacing: 0.04em; color: var(--gold-ink); }
+  .report-caption { position: relative; margin-top: 18px; text-align: right; font: 400 12px/1.4 var(--mono); color: var(--on-navy-muted); }
+  @media (max-width: 520px) {
+    .report-mast, .report-body { padding-left: 18px; padding-right: 18px; }
+    .report-stage::before { display: none; }
+    .verdict h3 { font-size: 28px; }
+  }
+
+  /* ── Credentials strip ──────────────────────────────── */
+  .strip { border-bottom: 1px solid var(--rule); background: var(--card); }
+  .strip ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .strip li { padding: 26px 24px; border-left: 1px solid var(--rule); }
+  .strip li:first-child { border-left: 0; padding-left: 0; }
+  .strip strong { display: block; font: 600 22px/1.15 var(--display); color: var(--ink); }
+  .strip span { display: block; margin-top: 4px; font-size: 14px; color: var(--muted); }
+  @media (max-width: 900px) {
+    .strip ul { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .strip li { padding: 22px 18px; }
+    .strip li:nth-child(odd) { border-left: 0; padding-left: 0; }
+    .strip li:nth-child(n+3) { border-top: 1px solid var(--rule); }
+  }
+
+  /* ── Problem ────────────────────────────────────────── */
+  .scenarios { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin-top: 56px; }
+  .scenario { position: relative; padding: 30px 28px 32px; background: var(--card); border: 1px solid var(--rule); }
+  .scenario::before { content: ""; position: absolute; left: -1px; top: -1px; width: 48px; height: 2px; background: var(--mark); }
+  .scenario .who { font: 400 12px/1 var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--gold-ink); }
+  .scenario .subject { margin-top: 18px; font: 600 italic 24px/1.2 var(--display); color: var(--ink); }
+  .scenario p { margin-top: 14px; font-size: 16px; }
+  @media (max-width: 900px) { .scenarios { grid-template-columns: minmax(0, 1fr); } }
+
+  /* ── Agitate ────────────────────────────────────────── */
+  .agitate { background: var(--ivory); border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+  .agitate-grid { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: clamp(40px, 7vw, 100px); align-items: start; }
+  .costs { list-style: none; margin: 0; padding: 0; counter-reset: cost; }
+  .costs li { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 8px; padding: 28px 0; border-top: 1px solid var(--rule); counter-increment: cost; }
+  .costs li:last-child { border-bottom: 1px solid var(--rule); }
+  .costs li::before { content: counter(cost, upper-roman); font: 500 italic 30px/1 var(--display); color: var(--gold); }
+  .costs h3 { font-size: 26px; line-height: 1.15; }
+  .costs p { margin-top: 8px; font-size: 16px; }
+  @media (max-width: 900px) { .agitate-grid { grid-template-columns: minmax(0, 1fr); } }
+
+  /* ── Solution ───────────────────────────────────────── */
+  .checks { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 1px; margin-top: 60px; background: var(--rule); border: 1px solid var(--rule); }
+  .check { grid-column: span 2; padding: 34px 30px 36px; background: var(--card); }
+  .check:nth-child(4), .check:nth-child(5) { grid-column: span 3; }
+  .check svg { width: 34px; height: 34px; color: var(--gold); }
+  .check h3 { margin-top: 22px; font-size: 25px; line-height: 1.15; }
+  .check p { margin-top: 10px; font-size: 16px; }
+  .check .opt { display: inline-block; margin-left: 8px; padding: 3px 8px; vertical-align: middle; border: 1px solid var(--chip-line); border-radius: 10px; font: 600 10px/1 var(--text); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+  @media (max-width: 900px) {
+    .checks { grid-template-columns: minmax(0, 1fr); }
+    .check, .check:nth-child(4), .check:nth-child(5) { grid-column: auto; }
+  }
+
+  .promise {
+    display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 28px; align-items: start;
+    margin-top: 56px; padding: 40px clamp(24px, 4vw, 48px); background: var(--navy); color: var(--on-navy);
+    border-left: 3px solid var(--mark);
+  }
+  .promise-mark { display: grid; place-items: center; width: 56px; height: 56px; border: 1px solid var(--mark); border-radius: 50%; color: var(--mark); font: 600 26px/1 var(--display); }
+  .promise h3 { color: #FFFDF8; font-size: clamp(26px, 3vw, 34px); line-height: 1.1; }
+  .promise p { margin-top: 12px; max-width: 720px; }
+  .promise q { font-style: italic; color: #FFFDF8; quotes: "\201C" "\201D"; }
+  @media (max-width: 600px) { .promise { grid-template-columns: minmax(0, 1fr); } }
+
+  /* ── Verdicts ───────────────────────────────────────── */
+  .verdicts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; margin-top: 56px; }
+  .v { padding: 26px 24px 28px; background: var(--card); border: 1px solid var(--rule); border-top: 3px solid var(--tone); }
+  .v .seal { width: 34px; height: 34px; font-size: 16px; background: var(--tone); }
+  .v h3 { margin-top: 18px; font-size: 26px; line-height: 1.1; color: var(--tone); }
+  .v p { margin-top: 10px; font-size: 15px; }
+  .v.safe { --tone: var(--safe); }
+  .v.caution { --tone: var(--caution); }
+  .v.unsafe { --tone: var(--unsafe); }
+  .v.inconclusive { --tone: var(--navy-700); }
+  @media (max-width: 1040px) { .verdicts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 560px) { .verdicts { grid-template-columns: minmax(0, 1fr); } }
+
+  /* ── How it works ───────────────────────────────────── */
+  .how { background: var(--card); border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+  .steps { position: relative; list-style: none; margin: 64px 0 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 32px; counter-reset: step; }
+  .steps::before { content: ""; position: absolute; left: 0; right: 0; top: 27px; height: 1px; background: linear-gradient(90deg, var(--mark), var(--rule) 85%); }
+  .step { position: relative; counter-increment: step; }
+  .step-dot { position: relative; display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; background: var(--card); border: 1px solid var(--gold); color: var(--gold-ink); }
+  .step-dot svg { width: 24px; height: 24px; }
+  .step .num { display: block; margin-top: 26px; font: 400 12px/1 var(--mono); letter-spacing: 0.1em; color: var(--gold-ink); }
+  .step .num::before { content: "0" counter(step) "  —  "; white-space: pre; }
+  .step h3 { margin-top: 10px; font-size: 27px; line-height: 1.1; }
+  .step p { margin-top: 10px; font-size: 16px; }
+  .how-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 20px; margin-top: 60px; padding-top: 36px; border-top: 1px solid var(--rule); }
+  .how-cta p { color: var(--muted); font-size: 15px; }
+  @media (max-width: 900px) {
+    .steps { grid-template-columns: minmax(0, 1fr); gap: 0; }
+    .steps::before { left: 27px; right: auto; top: 0; bottom: 0; width: 1px; height: auto; background: linear-gradient(180deg, var(--mark), var(--rule) 85%); }
+    .step { display: grid; grid-template-columns: 56px minmax(0, 1fr); column-gap: 22px; padding-bottom: 36px; }
+    .step-dot { grid-row: span 3; }
+    .step .num { margin-top: 4px; }
+  }
+
+  /* ── Deployment ─────────────────────────────────────── */
+  .deploy { position: relative; overflow: hidden; background: linear-gradient(180deg, var(--navy) 0%, var(--navy-900) 100%); color: var(--on-navy); }
+  .deploy-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(40px, 6vw, 88px); align-items: center; }
+  .specs { list-style: none; margin: 40px 0 0; padding: 0; }
+  .specs li { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 16px; padding: 16px 0; border-top: 1px solid rgba(233, 228, 216, 0.12); font-size: 16px; }
+  .specs li:last-child { border-bottom: 1px solid rgba(233, 228, 216, 0.12); }
+  .specs b { font: 600 12px/1.9 var(--text); letter-spacing: 0.16em; text-transform: uppercase; color: var(--mark); }
+  .terminal { border: 1px solid rgba(233, 228, 216, 0.14); border-radius: 4px; background: var(--navy-950); box-shadow: 0 30px 70px -30px rgba(0, 0, 0, 0.7); overflow: hidden; }
+  .terminal-bar { display: flex; align-items: center; gap: 7px; padding: 12px 16px; border-bottom: 1px solid rgba(233, 228, 216, 0.1); }
+  .terminal-bar i { width: 9px; height: 9px; border-radius: 50%; background: rgba(233, 228, 216, 0.18); }
+  .terminal-bar span { margin-left: 10px; font: 400 12px/1 var(--mono); color: var(--on-navy-muted); }
+  .terminal pre { margin: 0; padding: 22px 22px 26px; overflow-x: auto; font: 400 13.5px/1.9 var(--mono); color: var(--on-navy); }
+  .terminal .p { color: var(--mark); user-select: none; }
+  .terminal .c { color: #7F8CA0; }
+  .data-note { margin-top: 22px; padding: 20px 22px; border: 1px solid var(--navy-line); font-size: 15px; color: var(--on-navy); }
+  .data-note strong { color: #FFFDF8; font-weight: 600; }
+  @media (max-width: 960px) { .deploy-grid { grid-template-columns: minmax(0, 1fr); } }
+  @media (max-width: 520px) { .specs li { grid-template-columns: minmax(0, 1fr); gap: 2px; } }
+
+  /* ── Proof (placeholders until real proof exists) ───── */
+  .proof-grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 24px; margin-top: 48px; }
+  .placeholder { padding: 34px 32px; border: 1px dashed var(--gold); background: repeating-linear-gradient(135deg, transparent 0 14px, rgba(154, 123, 63, 0.05) 14px 15px); }
+  .placeholder .tag { font: 400 12px/1 var(--mono); letter-spacing: 0.06em; color: var(--gold-ink); }
+  .placeholder blockquote { margin: 16px 0 0; font: 500 italic 26px/1.3 var(--display); color: var(--muted); }
+  .placeholder cite { display: block; margin-top: 16px; font: 400 14px/1.4 var(--text); font-style: normal; color: var(--muted); }
+  .placeholder .big { margin-top: 14px; font: 600 54px/1 var(--display); color: var(--muted); }
+  .placeholder p { margin-top: 10px; font-size: 15px; color: var(--muted); }
+  @media (max-width: 800px) { .proof-grid { grid-template-columns: minmax(0, 1fr); } }
+
+  /* ── FAQ ────────────────────────────────────────────── */
+  .faq { background: var(--ivory); border-top: 1px solid var(--rule); }
+  .faq-grid { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: clamp(40px, 7vw, 100px); }
+  .faq-list { border-top: 1px solid var(--rule); }
+  .faq details { border-bottom: 1px solid var(--rule); }
+  .faq summary {
+    display: flex; justify-content: space-between; align-items: center; gap: 20px;
+    padding: 24px 0; cursor: pointer; list-style: none;
+    font: 600 23px/1.25 var(--display); color: var(--ink);
+  }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary::after { content: "+"; flex: none; font: 400 26px/1 var(--text); color: var(--gold); transition: transform .25s ease; }
+  .faq details[open] summary::after { transform: rotate(45deg); }
+  .faq details p { padding: 0 44px 26px 0; font-size: 16.5px; }
+  .faq code { font: 400 14px var(--mono); color: var(--ink); background: var(--card); padding: 1px 6px; border: 1px solid var(--rule); }
+  @media (max-width: 900px) { .faq-grid { grid-template-columns: minmax(0, 1fr); } .faq details p { padding-right: 0; } }
+
+  /* ── Final CTA ──────────────────────────────────────── */
+  .final { position: relative; overflow: hidden; text-align: center; color: var(--on-navy); background: radial-gradient(800px 420px at 50% 0%, rgba(234, 166, 60, 0.12), transparent 70%), var(--navy-900); }
+  .final .guilloche { opacity: 0.3; }
+  .final-inner { position: relative; max-width: 760px; margin: 0 auto; }
+  .final img { width: 60px; margin: 0 auto; }
+  .final h2 { margin-top: 30px; font-size: clamp(38px, 5.4vw, 64px); line-height: 1.04; color: #FFFDF8; }
+  .final h2 em { color: var(--mark); }
+  .final p { margin: 22px auto 0; max-width: 580px; font-size: 19px; }
+  .final .hero-ctas { justify-content: center; }
+  .final .reassure { margin-top: 26px; font-size: 14px; color: var(--on-navy-muted); }
+
+</style>
+<script>document.documentElement.classList.add("js");</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<!-- Guilloché of the Montimage infinity curve, reused in hero and final CTA -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <path id="lem" vector-effect="non-scaling-stroke" d="M600 300 C 700 150, 920 150, 920 300 C 920 450, 700 450, 600 300 C 500 150, 280 150, 280 300 C 280 450, 500 450, 600 300 Z"/>
+    <linearGradient id="lemfade" x1="0" x2="1">
+      <stop offset="0" stop-color="#EAA63C" stop-opacity="0"/>
+      <stop offset="0.45" stop-color="#EAA63C" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#EAA63C" stop-opacity="0.15"/>
+    </linearGradient>
+    <g id="guilloche" fill="none" stroke="url(#lemfade)" stroke-width="1">
+      <use href="#lem" transform="translate(600 300) scale(0.50) translate(-600 -300)" vector-effect="non-scaling-stroke"/>
+      <use href="#lem" transform="translate(600 300) scale(0.70) translate(-600 -300)" vector-effect="non-scaling-stroke"/>
+      <use href="#lem" transform="translate(600 300) scale(0.90) translate(-600 -300)" vector-effect="non-scaling-stroke"/>
+      <use href="#lem" transform="translate(600 300) scale(1.10) translate(-600 -300)" vector-effect="non-scaling-stroke"/>
+      <use href="#lem" transform="translate(600 300) scale(1.30) translate(-600 -300)" vector-effect="non-scaling-stroke"/>
+      <use href="#lem" transform="translate(600 300) scale(1.55) translate(-600 -300)" vector-effect="non-scaling-stroke"/>
+      <use href="#lem" transform="translate(600 300) scale(1.85) translate(-600 -300)" vector-effect="non-scaling-stroke"/>
+      <use href="#lem" transform="translate(600 300) scale(2.20) translate(-600 -300)" vector-effect="non-scaling-stroke"/>
+      <use href="#lem" transform="translate(600 300) scale(2.65) translate(-600 -300)" vector-effect="non-scaling-stroke"/>
+    </g>
+  </defs>
+</svg>
+
+<header class="hero on-navy">
+  <svg class="guilloche" viewBox="0 0 1200 600" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+    <use href="#guilloche" transform="translate(260 40)"/>
+  </svg>
+
+  <div class="site-header">
+    <nav class="wrap nav" aria-label="Main">
+      <a class="brand" href="#top" id="top">
+        <img src="montimage-logo.png" width="109" height="51" alt="Montimage">
+        <span class="brand-text">
+          <span class="brand-name">Montimage</span>
+          <span class="brand-sub">Anti-Phishing Email Service</span>
+        </span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="#problem">The problem</a></li>
+        <li><a href="#checks">What we check</a></li>
+        <li><a href="#how">How it works</a></li>
+        <li><a href="#deploy">Deployment</a></li>
+        <li><a href="#faq">FAQ</a></li>
+      </ul>
+      <a class="btn btn-gold" href="#try">Try It Free</a>
+    </nav>
+  </div>
+
+  <div class="wrap hero-grid">
+    <div>
+      <span class="eyebrow">Anti-Phishing Email Service</span>
+      <h1>Forward it. <em>Know</em> whether it&rsquo;s phishing.</h1>
+      <p class="hero-lede">Your staff forward any doubtful email to one mailbox. The service checks its links, its sender and its wording, then replies with a plain-language verdict and the steps to take, in the employee&rsquo;s own language.</p>
+      <div class="hero-ctas">
+        <div class="forward">
+          <span class="forward-addr">antiphishing@montimage.eu</span>
+          <button type="button" class="btn btn-gold copy-btn" data-copy="antiphishing@montimage.eu" aria-live="polite">Copy Address</button>
+        </div>
+        <a class="btn btn-ghost" href="#how">See How It Works</a>
+      </div>
+      <p class="hero-note">Free for now. Open the suspicious email, choose <strong>Forward</strong> and send it to this address. The verdict comes back by reply.</p>
+    </div>
+
+    <figure class="report-stage reveal" style="margin:0">
+      <article class="report" aria-label="Example of the report an employee receives">
+        <div class="report-mast">
+          <span class="report-brand"><span aria-hidden="true">&#9670;</span>Email Security Check</span>
+          <span class="report-tag">REF 7F3A-21C9</span>
+        </div>
+        <div class="report-body">
+          <div class="report-q">Is this email phishing?</div>
+          <div class="verdict">
+            <span class="seal" aria-hidden="true">&#10005;</span>
+            <div>
+              <h3>Phishing</h3>
+              <p>This email is dangerous. Do not click its links, open its attachments or reply.</p>
+            </div>
+          </div>
+          <p class="report-meta">Risk score <strong>82</strong>/100 &nbsp;&middot;&nbsp; AI confidence <strong>90%</strong></p>
+
+          <div class="report-label">The email you asked us to check</div>
+          <dl class="kv">
+            <dt>Subject</dt><dd class="strong">Overdue invoice #4471: payment required today</dd>
+            <dt>From</dt><dd>Accounts Team &lt;billing@supplier-payments-portal.net&gt;</dd>
+          </dl>
+
+          <h4>Why we reached this verdict</h4>
+          <ul class="reasons">
+            <li>A link points to a domain on the known-phishing list.</li>
+            <li>The email fails sender authentication (DMARC) for the domain it claims.</li>
+            <li>The message pressures you to pay today through a link.</li>
+          </ul>
+
+          <div class="report-label">Checks performed</div>
+          <div class="chips">
+            <span class="chip flag"><b aria-hidden="true">!</b>Links</span>
+            <span class="chip flag"><b aria-hidden="true">!</b>Sender authentication</span>
+            <span class="chip flag"><b aria-hidden="true">!</b>Wording</span>
+            <span class="chip clear"><b aria-hidden="true">&#10003;</b>Attachments</span>
+            <span class="chip na"><b aria-hidden="true">&ndash;</b>Threat intelligence</span>
+          </div>
+
+          <div class="pdf">
+            <span class="pdf-icon" aria-hidden="true">PDF</span>
+            <span>The full report, with every check explained in plain language, is attached as a PDF.</span>
+          </div>
+        </div>
+      </article>
+      <figcaption class="report-caption">Example report. Sender and values are illustrative.</figcaption>
+    </figure>
+  </div>
+</header>
+
+<main id="main">
+
+  <section class="strip" aria-label="At a glance">
+    <div class="wrap">
+      <ul>
+        <li><strong>Montimage, Paris</strong><span>20+ years of cybersecurity research</span></li>
+        <li><strong>Self-hosted</strong><span>Runs on your own servers</span></li>
+        <li><strong>Six report languages</strong><span>English, French, Spanish, German, Italian, Dutch</span></li>
+        <li><strong>Local by default</strong><span>Baseline analysis makes no external calls</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- PROBLEM -->
+  <section class="section" id="problem">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">The problem</span>
+        <h2>The suspicious email reaches your staff before your security team sees it.</h2>
+        <p>Phishing is written for the person who has to act on it: the clerk who pays invoices, the employee whose password &ldquo;expires today&rdquo;, the assistant who handles the CEO&rsquo;s requests. They have seconds to decide and no tools to check.</p>
+      </div>
+      <div class="scenarios">
+        <article class="scenario reveal">
+          <span class="who">Accounts payable</span>
+          <p class="subject">&ldquo;Overdue invoice: payment required today&rdquo;</p>
+          <p>The supplier is real and so is the invoice number. The bank details are new, and the sending domain was registered this week.</p>
+        </article>
+        <article class="scenario reveal">
+          <span class="who">Every employee</span>
+          <p class="subject">&ldquo;Your password expires in 2 hours&rdquo;</p>
+          <p>The logo and layout copy your IT portal exactly. The link leads to a look-alike domain that collects the password you type.</p>
+        </article>
+        <article class="scenario reveal">
+          <span class="who">Executive assistants</span>
+          <p class="subject">&ldquo;Are you at your desk? Need a favour&rdquo;</p>
+          <p>It carries the CEO&rsquo;s name but comes from a personal address, and it asks for gift-card codes before a meeting ends.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- AGITATE -->
+  <section class="section agitate" aria-labelledby="agitate-title">
+    <div class="wrap agitate-grid">
+      <div class="section-head reveal">
+        <span class="eyebrow">The cost of guessing</span>
+        <h2 id="agitate-title">Every unanswered doubt ends in a click, a ticket or silence.</h2>
+        <p>Without a quick way to check, people make one of three choices. None of them is good for you.</p>
+      </div>
+      <ol class="costs">
+        <li class="reveal">
+          <div>
+            <h3>They click.</h3>
+            <p>One password typed into a fake login page gives an attacker a working account inside your organisation.</p>
+          </div>
+        </li>
+        <li class="reveal">
+          <div>
+            <h3>They open a ticket.</h3>
+            <p>Every &ldquo;is this real?&rdquo; request lands on the same few analysts, in the same queue as the alerts that need them.</p>
+          </div>
+        </li>
+        <li class="reveal">
+          <div>
+            <h3>They stop asking.</h3>
+            <p>When a report gets no answer, people stop reporting, and the next suspicious email is handled by guesswork.</p>
+          </div>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- SOLUTION -->
+  <section class="section" id="checks">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">The service</span>
+        <h2>One mailbox, independent checks, one plain answer.</h2>
+        <p>Each forwarded email is examined by several independent checks at once. Their findings are weighed into a single risk score and explained in words anyone can act on.</p>
+      </div>
+
+      <div class="checks">
+        <article class="check reveal">
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M13 19l6-6"/><path d="M11 15l-3 3a4.2 4.2 0 006 6l3-3"/><path d="M21 17l3-3a4.2 4.2 0 00-6-6l-3 3"/></svg>
+          <h3>Links and domains</h3>
+          <p>Every link is checked for suspicious patterns and compared, subdomains included, against a list of known phishing domains. Optional WHOIS and DNS lookups show how old a domain is and who registered it.</p>
+        </article>
+        <article class="check reveal">
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M16 4l10 4v7c0 6.5-4.3 11-10 13-5.7-2-10-6.5-10-13V8l10-4z"/><path d="M11.5 16l3 3 6-6.5"/></svg>
+          <h3>Sender authenticity</h3>
+          <p>SPF, DKIM and DMARC results, and their alignment with the From address, show whether the email really comes from the domain it claims.</p>
+        </article>
+        <article class="check reveal">
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M5 8h22M5 14h15M5 20h10"/><circle cx="23" cy="22" r="4.5"/><path d="M23 19.5v2.8l1.8 1.2"/></svg>
+          <h3>Pressure and pretext</h3>
+          <p>Local pattern analysis flags urgent subjects, pressure phrases and requests to verify an account, without calling any AI service.</p>
+        </article>
+        <article class="check reveal">
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><rect x="8" y="8" width="16" height="16" rx="2"/><path d="M12 4v4M20 4v4M12 24v4M20 24v4M4 12h4M4 20h4M24 12h4M24 20h4"/><path d="M13 16h6M16 13v6"/></svg>
+          <h3>AI review <span class="opt">Optional</span></h3>
+          <p>Add a model that reads the email the way a careful person would, looking for deception and impersonation. Choose OpenAI, Google Gemini, Mistral, Groq or TypeSafe, or run a local Ollama model on your own hardware.</p>
+        </article>
+        <article class="check reveal">
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><circle cx="16" cy="16" r="11"/><path d="M5 16h22M16 5c3.2 3.4 4.8 7 4.8 11S19.2 23.6 16 27M16 5c-3.2 3.4-4.8 7-4.8 11s1.6 7.6 4.8 11"/></svg>
+          <h3>Threat intelligence and attachments <span class="opt">Optional</span></h3>
+          <p>Check URLs, domains and IP addresses against VirusTotal, AbuseIPDB and AlienVault OTX, and scan attachments for known malware with ClamAV.</p>
+        </article>
+      </div>
+
+      <aside class="promise reveal">
+        <span class="promise-mark" aria-hidden="true">?</span>
+        <div>
+          <h3>It never calls an email safe for lack of evidence.</h3>
+          <p>If too many checks fail, or the evidence is too thin for a confident answer, the report says <q>Could not confirm it is safe</q> and tells the reader to verify the sender first. A check that could not run is never counted as a clean result.</p>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- VERDICTS -->
+  <section class="section" style="padding-top:0" aria-labelledby="verdicts-title">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">The answer</span>
+        <h2 id="verdicts-title">Four possible verdicts, each with a next step.</h2>
+        <p>The verdict is the first thing in the reply, so the reader knows what to do before they scroll. The reasons follow, and the full explanation is attached as a PDF.</p>
+      </div>
+      <div class="verdicts">
+        <article class="v unsafe reveal">
+          <span class="seal" aria-hidden="true">&#10005;</span>
+          <h3>Phishing</h3>
+          <p>This email is dangerous. Do not click its links, open its attachments or reply.</p>
+        </article>
+        <article class="v caution reveal">
+          <span class="seal" aria-hidden="true">!</span>
+          <h3>Possibly phishing</h3>
+          <p>Some details look suspicious. Verify the sender before you click, reply or pay.</p>
+        </article>
+        <article class="v inconclusive reveal">
+          <span class="seal" aria-hidden="true">?</span>
+          <h3>Could not confirm it is safe</h3>
+          <p>We could not complete every check, so we cannot confirm this email is safe. Treat it with caution and verify the sender before you act on it.</p>
+        </article>
+        <article class="v safe reveal">
+          <span class="seal" aria-hidden="true">&#10003;</span>
+          <h3>Not phishing</h3>
+          <p>We found no signs of phishing. This email looks safe to use.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="section how" id="how">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">How it works</span>
+        <h2>Four steps between &ldquo;is this real?&rdquo; and an answer.</h2>
+      </div>
+      <ol class="steps">
+        <li class="step reveal">
+          <span class="step-dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="M3.5 6l8.5 7 8.5-7"/></svg></span>
+          <span class="num">Forward</span>
+          <h3>Forward the email</h3>
+          <p>The employee forwards it to your monitored mailbox from any mail client. Nothing to install.</p>
+        </li>
+        <li class="step reveal">
+          <span class="step-dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M4 7h16M4 12h10M4 17h7"/><circle cx="17.5" cy="16.5" r="3"/><path d="M19.7 18.7L22 21"/></svg></span>
+          <span class="num">Unwrap</span>
+          <h3>Recover the original</h3>
+          <p>The service extracts the original message, its sender, links and attachments, and detects its language.</p>
+        </li>
+        <li class="step reveal">
+          <span class="step-dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="8" cy="6" r="1.6" fill="currentColor"/><circle cx="15" cy="12" r="1.6" fill="currentColor"/><circle cx="10" cy="18" r="1.6" fill="currentColor"/></svg></span>
+          <span class="num">Analyse</span>
+          <h3>Run the checks</h3>
+          <p>Independent checks run in parallel. Their findings are combined into one risk score and a threat type.</p>
+        </li>
+        <li class="step reveal">
+          <span class="step-dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M10 8L5 12l5 4"/><path d="M5 12h9a5 5 0 015 5v1"/></svg></span>
+          <span class="num">Reply</span>
+          <h3>Receive the verdict</h3>
+          <p>The employee gets a verdict-first reply in their language, with the full report attached as a PDF.</p>
+        </li>
+      </ol>
+      <div class="how-cta reveal">
+        <div class="forward on-paper">
+          <span class="forward-addr">antiphishing@montimage.eu</span>
+          <button type="button" class="btn btn-navy copy-btn" data-copy="antiphishing@montimage.eu" aria-live="polite">Copy Address</button>
+        </div>
+        <p>Try it on a real email: use <strong>Forward</strong> in your mail client and send it to this address. The verdict and the PDF report come back by reply. Free for now.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- DEPLOYMENT -->
+  <section class="section deploy on-navy" id="deploy">
+    <div class="wrap deploy-grid">
+      <div class="reveal">
+        <div class="section-head">
+          <span class="eyebrow">Deployment</span>
+          <h2>Runs on your infrastructure, with the mailbox you already have.</h2>
+          <p>The service connects to a standard IMAP and SMTP account, so it works with your existing mail provider.</p>
+        </div>
+        <ul class="specs">
+          <li><b>Runtime</b><span>Python 3.12 service, with a production Docker image</span></li>
+          <li><b>Mail</b><span>Any IMAP inbox for intake, any SMTP server for replies</span></li>
+          <li><b>Storage</b><span>MongoDB for analysis history</span></li>
+          <li><b>Operations</b><span>The <code style="font-family:var(--mono);font-size:14px">apc</code> command-line tool, plus an optional <code style="font-family:var(--mono);font-size:14px">/health</code> endpoint for your orchestrator</span></li>
+          <li><b>Licence</b><span>Montimage licence</span></li>
+        </ul>
+      </div>
+      <div class="reveal">
+        <div class="terminal" role="img" aria-label="Terminal showing apc commands: validate, start, status, logs and stats">
+          <div class="terminal-bar"><i></i><i></i><i></i><span>apc: service management</span></div>
+<pre><span class="c"># Check the configuration before going live</span>
+<span class="p">$ </span>apc validate
+
+<span class="c"># Start watching the mailbox</span>
+<span class="p">$ </span>apc start
+<span class="p">$ </span>apc status
+
+<span class="c"># Follow analyses as they happen</span>
+<span class="p">$ </span>apc logs -f
+
+<span class="c"># Risk-level distribution of analysed email</span>
+<span class="p">$ </span>apc stats</pre>
+        </div>
+        <p class="data-note"><strong>You decide what leaves your network.</strong> The baseline checks run locally. Hosted AI providers and threat-intelligence feeds receive the data they need to answer, so each one stays off until you enable it.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROOF -->
+  <section class="section" aria-labelledby="proof-title">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">In use</span>
+        <h2 id="proof-title">What security teams say.</h2>
+      </div>
+      <div class="proof-grid">
+        <figure class="placeholder reveal" style="margin:0">
+          <span class="tag">[proof needed]: customer testimonial</span>
+          <blockquote>A quote from a security lead or IT manager about what changed after rollout.</blockquote>
+          <cite>Name, role, organisation</cite>
+        </figure>
+        <div class="placeholder reveal">
+          <span class="tag">[proof needed]: pilot metric</span>
+          <div class="big">&mdash;</div>
+          <p>A measured result from a real deployment, for example emails analysed or tickets avoided during a pilot, with its period and source.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="section faq" id="faq">
+    <div class="wrap faq-grid">
+      <div class="section-head reveal">
+        <span class="eyebrow">Questions</span>
+        <h2>Before you deploy.</h2>
+        <p>Something not covered here? <a href="support.html" style="color:var(--gold-ink)">Ask us by email or on GitHub</a>.</p>
+      </div>
+      <div class="faq-list reveal">
+        <details>
+          <summary>Does it block phishing before it reaches the inbox?</summary>
+          <p>No. It analyses the emails your staff forward to it and does not sit in the delivery path. Keep your existing mail filter. This service covers what gets past it.</p>
+        </details>
+        <details>
+          <summary>Do we need an AI provider?</summary>
+          <p>No. Link, domain, sender-authentication and wording checks run locally without any model. AI review is an optional layer, and it can use a local Ollama model if you prefer not to send email content to a hosted provider.</p>
+        </details>
+        <details>
+          <summary>Does email content leave our infrastructure?</summary>
+          <p>Not when you host it yourself with the baseline configuration. If you enable a hosted AI provider or a threat-intelligence feed, that provider receives the data it needs to answer: the email text for AI review, and URLs, domains or IP addresses for the feeds. Each integration is off until you switch it on.</p>
+        </details>
+        <details>
+          <summary>What happens to an email I forward to antiphishing@montimage.eu?</summary>
+          <p>It is analysed by the instance of the service that Montimage runs, and the verdict is sent back to the address you forwarded from. Forwarding it shares the email with Montimage, so do not use this address for mail you are not allowed to share. For confidential mail, run the service on your own infrastructure. The <a href="privacy.html" style="color:var(--gold-ink)">privacy policy</a> lists who receives what and how long it is kept.</p>
+        </details>
+        <details>
+          <summary>What happens when the service is not sure?</summary>
+          <p>It says so. If too many checks fail, or confidence is too low, the verdict reads &ldquo;Could not confirm it is safe&rdquo; and the reader is told to verify the sender. It will not return a clean result it cannot support.</p>
+        </details>
+        <details>
+          <summary>Which languages are supported?</summary>
+          <p>Forwarded emails are recognised, and reports are written, in English, French, Spanish, German, Italian and Dutch. The language is detected from the forwarded message, so staff receive the reply in their own language.</p>
+        </details>
+        <details>
+          <summary>What do we need to run it?</summary>
+          <p>A server or container host for the Python 3.12 service, a MongoDB database, and an IMAP/SMTP mailbox for staff to forward to. Redis is optional for caching. Run <code>apc validate</code> to check the configuration before you start.</p>
+        </details>
+        <details>
+          <summary>How is it licensed?</summary>
+          <p>The service is proprietary software, licensed by Montimage. Contact us to discuss licensing terms for your organisation.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- FINAL CTA -->
+  <section class="section final on-navy" id="try" aria-labelledby="final-title">
+    <svg class="guilloche" viewBox="0 0 1200 600" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+      <use href="#guilloche" transform="translate(0 300)"/>
+    </svg>
+    <div class="wrap final-inner reveal">
+      <img src="montimage-logo.png" width="109" height="51" alt="">
+      <h2 id="final-title">See the report your staff <em>would receive.</em></h2>
+      <p>Got a suspicious email? Open it, choose <strong>Forward</strong> and send it to the address below. You will get the verdict and the full report back by reply, free for now.</p>
+      <div class="hero-ctas">
+        <div class="forward">
+          <span class="forward-addr">antiphishing@montimage.eu</span>
+          <button type="button" class="btn btn-gold copy-btn" data-copy="antiphishing@montimage.eu" aria-live="polite">Copy Address</button>
+        </div>
+      </div>
+      <p class="reassure">Prefer your own infrastructure? <a href="mailto:developer@montimage.eu?subject=Anti-Phishing%20Email%20Service%20%E2%80%94%20deployment">Talk to us about deploying it in-house</a>. It runs self-hosted, with only the integrations you choose to enable.</p>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <div class="wrap footer-grid">
+    <a class="brand" href="https://www.montimage.com">
+      <img src="montimage-logo.png" width="109" height="51" alt="Montimage">
+      <span class="brand-text">
+        <span class="brand-name">Montimage</span>
+        <span class="brand-sub">Anti-Phishing Email Service</span>
+      </span>
+    </a>
+    <address>
+      Montimage<br>
+      39 rue Bobillot, 75013 Paris, France<br>
+      <a href="mailto:developer@montimage.eu">developer@montimage.eu</a> &nbsp;&middot;&nbsp; <a href="https://www.montimage.com">www.montimage.com</a>
+    </address>
+    <ul class="footer-links">
+      <li><a href="support.html">Support &amp; feedback</a></li>
+      <li><a href="privacy.html">Privacy</a></li>
+      <li><a href="https://github.com/montimage-projects/anti-phishing-email-service-website/issues/new/choose">Report an issue</a></li>
+    </ul>
+  </div>
+  <div class="wrap footer-legal">&copy; 2026 Montimage. All rights reserved. The Anti-Phishing Email Service is proprietary software licensed by Montimage.</div>
+</footer>
+
+<script>
+  (function () {
+    var items = document.querySelectorAll(".reveal");
+    if (!("IntersectionObserver" in window) || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      items.forEach(function (el) { el.classList.add("in"); });
+      return;
+    }
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }
+      });
+    }, { rootMargin: "0px 0px -8% 0px", threshold: 0.08 });
+    items.forEach(function (el) { io.observe(el); });
+    // Deep links (#faq) land mid-page: show what is already on screen at once.
+    function showVisible() {
+      items.forEach(function (el) {
+        var r = el.getBoundingClientRect();
+        if (r.top < window.innerHeight && r.bottom > 0) { el.classList.add("in"); io.unobserve(el); }
+      });
+    }
+    window.addEventListener("load", showVisible);
+    window.addEventListener("hashchange", showVisible);
+    window.addEventListener("scroll", showVisible, { passive: true });
+  })();
+
+  // Copy the trial address; if the clipboard is unavailable, select it instead.
+  (function () {
+    function selectAddress(btn) {
+      var range = document.createRange();
+      range.selectNodeContents(btn.parentNode.querySelector(".forward-addr"));
+      var sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+    document.querySelectorAll(".copy-btn").forEach(function (btn) {
+      var label = btn.textContent;
+      btn.addEventListener("click", function () {
+        if (!navigator.clipboard || !window.isSecureContext) { selectAddress(btn); return; }
+        navigator.clipboard.writeText(btn.getAttribute("data-copy")).then(function () {
+          btn.textContent = "Copied";
+          setTimeout(function () { btn.textContent = label; }, 2000);
+        }, function () { selectAddress(btn); });
+      });
+    });
+  })();
+</script>
+</body>
+</html>

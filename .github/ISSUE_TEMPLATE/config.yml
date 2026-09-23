@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Email (private)
+    url: mailto:developer@montimage.eu
+    about: Anything confidential, including a suspicious email sample. Do not use antiphishing@montimage.eu, which only analyses emails.
+  - name: Website
+    url: https://montimage-projects.github.io/anti-phishing-email-service-website/
+    about: About the Montimage Anti-Phishing Email Service
+  - name: Privacy Policy
+    url: https://montimage-projects.github.io/anti-phishing-email-service-website/privacy.html
+    about: How we handle forwarded emails and support requests

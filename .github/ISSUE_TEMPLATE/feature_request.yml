@@ -1,0 +1,61 @@
+name: Feature Request
+description: Suggest a check, a language, an integration or a report change
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the idea. Tell us what you want to achieve and why it matters to you.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: What are you trying to do, and what is missing today?
+      placeholder: "Our staff also receive phishing by..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: How do you imagine it working?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Checks and detection
+        - Verdict and report
+        - Languages
+        - AI providers
+        - Threat-intelligence feeds
+        - Deployment and operations
+        - This website
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: usage
+    attributes:
+      label: How do you use the service?
+      options:
+        - Free trial (antiphishing@montimage.eu)
+        - Our own deployment
+        - Not yet
+    validations:
+      required: false
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Mockups, links or anything else that explains the idea. No email content, please.
+    validations:
+      required: false

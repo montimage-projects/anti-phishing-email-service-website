@@ -1,0 +1,85 @@
+name: Wrong Verdict
+description: A phishing email was called safe, or a genuine email was flagged as phishing
+title: "[Verdict]: "
+labels: ["wrong-verdict"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for telling us. Wrong verdicts are the reports that most improve detection.
+
+        **This issue is public.** Do not paste the suspicious email, its headers, email addresses, links or attachments. Give the **Reference** code printed at the foot of your report instead. If we need the email itself, send it to [developer@montimage.eu](mailto:developer@montimage.eu) with this issue number.
+
+  - type: input
+    id: reference
+    attributes:
+      label: Reference
+      description: The code at the foot of the reply and of the PDF report.
+      placeholder: "7F3A21C9"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: received
+    attributes:
+      label: Verdict received
+      options:
+        - Phishing
+        - Possibly phishing
+        - Could not confirm it is safe
+        - Not phishing
+    validations:
+      required: true
+
+  - type: dropdown
+    id: expected
+    attributes:
+      label: Verdict you expected
+      options:
+        - Phishing
+        - Possibly phishing
+        - Not phishing
+        - Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: why
+    attributes:
+      label: Why you think the verdict is wrong
+      description: Describe the email in general terms (for example "fake invoice from a known supplier"), without quoting it.
+      placeholder: "The email is a genuine newsletter from our bank, but..."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: usage
+    attributes:
+      label: How do you use the service?
+      options:
+        - Free trial (antiphishing@montimage.eu)
+        - Our own deployment
+    validations:
+      required: true
+
+  - type: dropdown
+    id: language
+    attributes:
+      label: Report language
+      options:
+        - English
+        - French
+        - Spanish
+        - German
+        - Italian
+        - Dutch
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy check
+      options:
+        - label: This issue contains no email content, headers, addresses or attachments.
+          required: true

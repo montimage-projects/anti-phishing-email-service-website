@@ -1,0 +1,76 @@
+name: Bug Report
+description: No reply arrived, the report looks broken, or the service misbehaves
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. The details below help us reproduce and fix it.
+
+        **This issue is public.** Do not paste the suspicious email, its headers, email addresses, links or attachments. Give the **Reference** code printed at the foot of your report instead. If we need the email itself, send it to [developer@montimage.eu](mailto:developer@montimage.eu) with this issue number.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the problem and what you expected instead.
+      placeholder: "I forwarded an email an hour ago and no reply has arrived."
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open the suspicious email in Outlook
+        2. Choose Forward and send it to the analysis address
+        3. ...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: usage
+    attributes:
+      label: How do you use the service?
+      options:
+        - Free trial (antiphishing@montimage.eu)
+        - Our own deployment
+        - This website
+    validations:
+      required: true
+
+  - type: input
+    id: reference
+    attributes:
+      label: Reference (if you received a report)
+      description: The code at the foot of the reply and of the PDF report.
+      placeholder: "7F3A21C9"
+    validations:
+      required: false
+
+  - type: input
+    id: client
+    attributes:
+      label: Mail client
+      placeholder: "Outlook for Windows, Gmail web, Apple Mail..."
+    validations:
+      required: false
+
+  - type: input
+    id: version
+    attributes:
+      label: Service version (own deployment only)
+      description: From `apc --version` or your deployment's release tag.
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs (own deployment only)
+      description: Relevant output from `apc logs`, with email addresses and message content removed.
+      render: shell
+    validations:
+      required: false
